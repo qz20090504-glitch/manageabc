@@ -65,6 +65,12 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
   <label>記録する年月</label><input type="month" id="recordMonth">
   <p class="help">前回の記録値を自動で入力欄に反映します。変わった金額だけ更新して保存できます。</p>
   <div id="recordFields"></div>
+  <div class="card" style="padding:12px;margin:12px 0;border:1px dashed var(--green);box-shadow:none">
+   <h3>⑤以降の資産カテゴリーを追加</h3>
+   <label>資産名</label><input id="recordNewCategoryName" maxlength="30" placeholder="例：クラウドファンディング">
+   <button class="secondary" style="width:100%;margin-top:10px" id="recordAddCategory">＋ 資産カテゴリーを追加</button>
+   <p class="help">追加したカテゴリーは評価額・残高と累計元本を記録する投資資産として登録されます。</p>
+  </div>
   <button class="primary" style="width:100%;margin-top:16px" id="saveRecord">この月の記録を保存</button>
   <p class="help">同じ年月を再保存すると、その月の記録を更新します。</p>
  </div>
@@ -84,10 +90,9 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <section id="settings" class="panel">
  <div class="card"><h2>目標・設定</h2><label>総資産の目標金額（円）</label><input type="number" id="goalInput" min="0" step="10000" placeholder="例：20000000"><button class="primary" style="width:100%;margin-top:12px" id="saveGoal">目標を保存</button>
  <hr><h3>資産カテゴリーの管理</h3>
- <p class="help">カテゴリーを追加すると、月次記録・資産配分・推移・投資分析に反映されます。投資資産に設定したカテゴリーでは評価額と累計元本を記録できます。</p>
+ <p class="help">①現金・預金〜④暗号資産は固定項目です。⑤以降は記録ページから自由な名前で追加でき、すべて評価額・残高と累計元本を記録する投資資産として扱います。</p>
  <div id="categoryManager"></div>
- <div class="formgrid"><div><label>新しいカテゴリー名</label><input id="newCategoryName" maxlength="30" placeholder="例：個別株"></div><div><label>種類</label><select id="newCategoryType"><option value="invest">投資資産（元本も記録）</option><option value="asset">通常資産</option></select></div></div>
- <button class="primary" style="width:100%;margin-top:10px" id="addCategory">カテゴリーを追加</button>
+ <p class="help">カテゴリーの追加は「記録」ページから行えます。ここでは追加済みカテゴリーの名称変更・削除・並び替えができます。</p>
  <hr><h3>データのバックアップ</h3><div class="toolbar"><button class="secondary" id="exportBtn">JSONバックアップを書き出す</button><button class="secondary" id="csvBtn">CSVを書き出す</button></div>
  <label>JSONバックアップを復元</label><input type="file" id="importFile" accept=".json,application/json"><p class="help">復元すると現在の記録はバックアップ内容に置き換わります。必要なら先に書き出してください。</p>
  <hr><h3>データ保存について</h3><p class="help">このアプリは入力した資産情報をこのブラウザ内（IndexedDB）に保存します。銀行・証券口座とは接続しません。端末故障、ブラウザデータ削除、サイトデータ消去などで消える可能性があるため、定期的にJSONバックアップを保存してください。パスワードや口座番号は入力しないでください。</p>
@@ -103,22 +108,29 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 </nav>
 <script>
 const defaultCategories=[
- {id:'cash',name:'現金・預金',color:'#4b9a78',invest:false},
- {id:'nisa',name:'NISA',color:'#4f83cc',invest:true},
- {id:'ideco',name:'iDeCo',color:'#9b78c7',invest:true},
- {id:'crypto',name:'暗号資産',color:'#d69b42',invest:true},
- {id:'other',name:'その他資産',color:'#9ba7a0',invest:false}
+ {id:'cash',name:'現金・預金',color:'#4b9a78',invest:false,fixed:true},
+ {id:'nisa',name:'NISA',color:'#4f83cc',invest:true,fixed:true},
+ {id:'ideco',name:'iDeCo',color:'#9b78c7',invest:true,fixed:true},
+ {id:'crypto',name:'暗号資産',color:'#d69b42',invest:true,fixed:true}
 ];
 let categories=defaultCategories.map(c=>({...c}));
 const palette=['#4b9a78','#4f83cc','#9b78c7','#d69b42','#4aa6b5','#c77979','#7b8fbd','#8b9b55','#b17bb1','#648f91'];
 function persistCategories(){return put('settings',{key:'categories',value:categories})}
-function renderCategoryManager(){const el=document.getElementById('categoryManager');if(!el)return;el.innerHTML=categories.map((c,i)=>`<div class="monthitem" style="display:flex;align-items:center;gap:8px;margin:8px 0"><span class="dot" style="background:${c.color};flex:none"></span><div style="flex:1;min-width:0"><strong style="font-size:13px">${escapeHtml(c.name)}</strong><div class="small">${c.invest?'投資資産（評価額・累計元本）':'通常資産（評価額）'}</div></div><button class="secondary" data-up="${c.id}" ${i===0?'disabled':''} aria-label="上へ">↑</button><button class="secondary" data-down="${c.id}" ${i===categories.length-1?'disabled':''} aria-label="下へ">↓</button><button class="secondary" data-rename="${c.id}">名称</button>${categories.length>1?`<button class="danger" data-delete="${c.id}">削除</button>`:''}</div>`).join('');
+function renderCategoryManager(){const el=document.getElementById('categoryManager');if(!el)return;el.innerHTML=categories.map((c,i)=>`<div class="monthitem" style="display:flex;align-items:center;gap:8px;margin:8px 0"><span class="dot" style="background:${c.color};flex:none"></span><div style="flex:1;min-width:0"><strong style="font-size:13px">${escapeHtml(c.name)}</strong><div class="small">${c.invest?'投資資産（評価額・累計元本）':'通常資産（評価額）'}${c.fixed?'・固定':''}</div></div>${!c.fixed?`<button class="secondary" data-up="${c.id}" ${i===4?'disabled':''} aria-label="上へ">↑</button><button class="secondary" data-down="${c.id}" ${i===categories.length-1?'disabled':''} aria-label="下へ">↓</button><button class="secondary" data-rename="${c.id}">名称</button><button class="danger" data-delete="${c.id}">削除</button>`:''}</div>`).join('');
  el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveCategory(b.dataset.up,-1));el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveCategory(b.dataset.down,1));el.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>renameCategory(b.dataset.rename));el.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteCategory(b.dataset.delete));}
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-async function moveCategory(id,delta){let i=categories.findIndex(c=>c.id===id),j=i+delta;if(j<0||j>=categories.length)return;[categories[i],categories[j]]=[categories[j],categories[i]];await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
+async function moveCategory(id,delta){let i=categories.findIndex(c=>c.id===id),j=i+delta;if(i<4||j<4||j>=categories.length)return;[categories[i],categories[j]]=[categories[j],categories[i]];await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
 async function renameCategory(id){let c=categories.find(x=>x.id===id),name=prompt('カテゴリー名を入力してください',c?.name||'');if(name===null)return;name=name.trim();if(!name)return alert('カテゴリー名を入力してください');if(categories.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()))return alert('同じ名前のカテゴリーがあります');c.name=name;await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
 async function deleteCategory(id){let c=categories.find(x=>x.id===id);if(!c||!confirm(`「${c.name}」を削除しますか？\n過去の記録からもこのカテゴリーのデータが削除されます。`))return;categories=categories.filter(x=>x.id!==id);for(const r of records){if(r.values)delete r.values[id];await put('records',r)}await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
-document.getElementById('addCategory').onclick=async()=>{let name=document.getElementById('newCategoryName').value.trim();if(!name)return alert('カテゴリー名を入力してください');if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase()))return alert('同じ名前のカテゴリーがあります');let id='custom_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);categories.push({id,name,color:palette[categories.length%palette.length],invest:document.getElementById('newCategoryType').value==='invest'});await persistCategories();document.getElementById('newCategoryName').value='';renderCategoryManager();initRecordForm();renderAll();};
+async function addCustomCategory(){
+ let input=document.getElementById('recordNewCategoryName'),name=input.value.trim();
+ if(!name)return alert('資産名を入力してください');
+ if(categories.some(c=>c.name.toLowerCase()===name.toLowerCase()))return alert('同じ名前のカテゴリーがあります');
+ let id='custom_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);
+ categories.push({id,name,color:palette[categories.length%palette.length],invest:true,fixed:false});
+ await persistCategories();input.value='';buildFields();renderCategoryManager();renderAll();
+}
+document.getElementById('recordAddCategory').onclick=addCustomCategory;
 const yen=n=>new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}).format(Number(n)||0);
 const num=n=>Math.max(0,Number(n)||0);
 let db, records=[], goal=20000000, chartRange=12;
@@ -131,17 +143,17 @@ function getAll(name){return new Promise((res,rej)=>{let r=store(name).getAll();
 function put(name,obj){return new Promise((res,rej)=>{let r=store(name,'readwrite').put(obj);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
 function clearStore(name){return new Promise((res,rej)=>{let r=store(name,'readwrite').clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
 async function loadAll(){records=(await getAll('records')).sort((a,b)=>a.month.localeCompare(b.month));let s=await getAll('settings');let g=s.find(x=>x.key==='goal'),cs=s.find(x=>x.key==='categories');if(g)goal=g.value;if(cs&&Array.isArray(cs.value)&&cs.value.length){
- categories=cs.value.filter(c=>c.id!=='otherInvest');
- if(!categories.some(c=>c.id==='other'))categories.push({id:'other',name:'その他資産',color:'#9ba7a0',invest:false});
- if(categories.length!==cs.value.length)await persistCategories();
+ const saved=cs.value.filter(c=>c.id!=='otherInvest'&&c.id!=='other'&&!['cash','nisa','ideco','crypto'].includes(c.id));
+ categories=[...defaultCategories.map(c=>({...c})),...saved.map((c,i)=>({...c,invest:true,fixed:false,color:c.color||palette[(i+4)%palette.length]}))];
+ if(categories.length!==cs.value.length || saved.some(c=>!c.invest))await persistCategories();
  }else{categories=defaultCategories.map(c=>({...c}));await persistCategories()}document.getElementById('goalInput').value=goal;renderCategoryManager();}
 function latest(){return records[records.length-1]}
 function totals(r){return categories.reduce((s,c)=>s+num(r?.values?.[c.id]?.value),0)}
 function investTotals(r){let value=0,principal=0;categories.filter(c=>c.invest).forEach(c=>{value+=num(r?.values?.[c.id]?.value);principal+=num(r?.values?.[c.id]?.principal)});return {value,principal,pl:value-principal,rate:principal?(value/principal-1)*100:0}}
 function initRecordForm(){let d=new Date();let month=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');document.getElementById('recordMonth').value=latest()?.month||month;buildFields();}
-function buildFields(){let month=document.getElementById('recordMonth').value;let exact=records.find(r=>r.month===month);let prev=[...records].filter(r=>r.month<month).pop();let base=exact||prev;let html='';categories.forEach(c=>{let v=base?.values?.[c.id]||{};html+=`<div class="card" style="padding:12px;margin:10px 0;border:1px solid var(--line);box-shadow:none"><div class="row"><strong>${escapeHtml(c.name)}</strong><span class="small">${c.invest?'投資資産':'資産'}</span></div>${c.id==='other'?`<label>資産名</label><input type="text" maxlength="30" id="name_${c.id}" value="${escapeHtml(c.name)}" placeholder="例：自動車・貴金属・不動産など">`:''}<label>評価額・残高（円）</label><input type="number" min="0" step="1" inputmode="numeric" id="v_${c.id}" value="${v.value??''}" placeholder="金額を入力">`;if(c.invest){html+=`<label>累計元本（円）</label><input type="number" min="0" step="1" inputmode="numeric" id="p_${c.id}" value="${v.principal??''}" placeholder="これまでの投資元本"><div class="formgrid"><div><label>今月の追加投資（任意）</label><input type="number" min="0" id="a_${c.id}" value="${v.added??''}" placeholder="追加額"></div><div><label>今月の取り崩し（任意）</label><input type="number" min="0" id="w_${c.id}" value="${v.withdrawn??''}" placeholder="取り崩し額"></div></div>`}html+='</div>'});document.getElementById('recordFields').innerHTML=html;}
+function buildFields(){let month=document.getElementById('recordMonth').value;let exact=records.find(r=>r.month===month);let prev=[...records].filter(r=>r.month<month).pop();let base=exact||prev;let html='';categories.forEach(c=>{let v=base?.values?.[c.id]||{};html+=`<div class="card" style="padding:12px;margin:10px 0;border:1px solid var(--line);box-shadow:none"><div class="row"><strong>${escapeHtml(c.name)}</strong><span class="small">${c.invest?'投資資産':'資産'}</span></div><label>評価額・残高（円）</label><input type="number" min="0" step="1" inputmode="numeric" id="v_${c.id}" value="${v.value??''}" placeholder="金額を入力">`;if(c.invest){html+=`<label>累計元本（円）</label><input type="number" min="0" step="1" inputmode="numeric" id="p_${c.id}" value="${v.principal??''}" placeholder="これまでの投資元本"><div class="formgrid"><div><label>今月の追加投資（任意）</label><input type="number" min="0" id="a_${c.id}" value="${v.added??''}" placeholder="追加額"></div><div><label>今月の取り崩し（任意）</label><input type="number" min="0" id="w_${c.id}" value="${v.withdrawn??''}" placeholder="取り崩し額"></div></div>`}html+='</div>'});document.getElementById('recordFields').innerHTML=html;}
 document.getElementById('recordMonth').addEventListener('change',buildFields);
-document.getElementById('saveRecord').onclick=async()=>{let month=document.getElementById('recordMonth').value;if(!month)return alert('年月を選択してください');let values={};categories.forEach(c=>{if(c.id==='other'){let enteredName=document.getElementById('name_'+c.id)?.value.trim();if(enteredName)c.name=enteredName;}let value=num(document.getElementById('v_'+c.id).value);values[c.id]={value};if(c.invest){values[c.id].principal=num(document.getElementById('p_'+c.id).value);values[c.id].added=num(document.getElementById('a_'+c.id).value);values[c.id].withdrawn=num(document.getElementById('w_'+c.id).value)}});await put('records',{month,values,updatedAt:new Date().toISOString()});await persistCategories();await loadAll();initRecordForm();renderAll();alert(month+'の記録を保存しました');};
+document.getElementById('saveRecord').onclick=async()=>{let month=document.getElementById('recordMonth').value;if(!month)return alert('年月を選択してください');let values={};categories.forEach(c=>{let value=num(document.getElementById('v_'+c.id).value);values[c.id]={value};if(c.invest){values[c.id].principal=num(document.getElementById('p_'+c.id).value);values[c.id].added=num(document.getElementById('a_'+c.id).value);values[c.id].withdrawn=num(document.getElementById('w_'+c.id).value)}});await put('records',{month,values,updatedAt:new Date().toISOString()});await persistCategories();await loadAll();initRecordForm();renderAll();alert(month+'の記録を保存しました');};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='record')buildFields();if(b.dataset.tab==='trend'||b.dataset.tab==='invest')renderAll();});
 document.querySelectorAll('.range').forEach(b=>b.onclick=()=>{chartRange=b.dataset.range==='all'?'all':Number(b.dataset.range);renderTrend();});
 function drawBars(canvas,labels,values,color='#4b9a78'){let ctx=canvas.getContext('2d'),w=canvas.width=canvas.clientWidth*devicePixelRatio,h=canvas.height=canvas.clientHeight*devicePixelRatio;ctx.scale(devicePixelRatio,devicePixelRatio);let W=canvas.clientWidth,H=canvas.clientHeight,p={l:8,r:8,t:15,b:28},max=Math.max(1,...values)*1.12;ctx.strokeStyle='#e7ede8';ctx.fillStyle='#7b8981';ctx.font='10px sans-serif';for(let i=0;i<4;i++){let y=p.t+(H-p.t-p.b)*i/3;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke()}let n=values.length;if(!n)return;let step=(W-p.l-p.r)/n,bw=Math.max(5,step*.56);values.forEach((v,i)=>{let bh=(H-p.t-p.b)*v/max,x=p.l+i*step+(step-bw)/2,y=H-p.b-bh;ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,bw,bh,3);ctx.fill();if(n<=12||i===0||i===n-1){ctx.fillStyle='#718078';ctx.textAlign='center';ctx.fillText(labels[i].slice(2),x+bw/2,H-9)}})}
