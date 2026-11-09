@@ -69,7 +69,7 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
    <h3>⑤以降の資産カテゴリーを追加</h3>
    <label>資産名</label><input id="recordNewCategoryName" maxlength="30" placeholder="例：クラウドファンディング">
    <button class="secondary" style="width:100%;margin-top:10px" id="recordAddCategory">＋ 資産カテゴリーを追加</button>
-   <p class="help">追加したカテゴリーは評価額・残高と累計元本を記録する投資資産として登録されます。</p>
+   <p class="help">追加後の名称変更・削除、すべてのカテゴリーの順番変更は「設定」ページから行えます。追加したカテゴリーは評価額・残高と累計元本を記録する投資資産として登録されます。</p>
   </div>
   <button class="primary" style="width:100%;margin-top:16px" id="saveRecord">この月の記録を保存</button>
   <p class="help">同じ年月を再保存すると、その月の記録を更新します。</p>
@@ -90,7 +90,7 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <section id="settings" class="panel">
  <div class="card"><h2>目標・設定</h2><label>総資産の目標金額（円）</label><input type="number" id="goalInput" min="0" step="10000" placeholder="例：20000000"><button class="primary" style="width:100%;margin-top:12px" id="saveGoal">目標を保存</button>
  <hr><h3>資産カテゴリーの管理</h3>
- <p class="help">①現金・預金〜④暗号資産は固定項目です。⑤以降は記録ページから自由な名前で追加でき、すべて評価額・残高と累計元本を記録する投資資産として扱います。</p>
+ <p class="help">カテゴリーは上下ボタンで順番を変更できます。①〜④の名称・削除は固定ですが、⑤以降は名称変更・削除ができます。⑤以降は記録ページから自由な名前で追加でき、すべて評価額・残高と累計元本を記録する投資資産として扱います。</p>
  <div id="categoryManager"></div>
  <p class="help">カテゴリーの追加は「記録」ページから行えます。ここでは追加済みカテゴリーの名称変更・削除・並び替えができます。</p>
  <hr><h3>データのバックアップ</h3><div class="toolbar"><button class="secondary" id="exportBtn">JSONバックアップを書き出す</button><button class="secondary" id="csvBtn">CSVを書き出す</button></div>
@@ -116,10 +116,10 @@ const defaultCategories=[
 let categories=defaultCategories.map(c=>({...c}));
 const palette=['#4b9a78','#4f83cc','#9b78c7','#d69b42','#4aa6b5','#c77979','#7b8fbd','#8b9b55','#b17bb1','#648f91'];
 function persistCategories(){return put('settings',{key:'categories',value:categories})}
-function renderCategoryManager(){const el=document.getElementById('categoryManager');if(!el)return;el.innerHTML=categories.map((c,i)=>`<div class="monthitem" style="display:flex;align-items:center;gap:8px;margin:8px 0"><span class="dot" style="background:${c.color};flex:none"></span><div style="flex:1;min-width:0"><strong style="font-size:13px">${escapeHtml(c.name)}</strong><div class="small">${c.invest?'投資資産（評価額・累計元本）':'通常資産（評価額）'}${c.fixed?'・固定':''}</div></div>${!c.fixed?`<button class="secondary" data-up="${c.id}" ${i===4?'disabled':''} aria-label="上へ">↑</button><button class="secondary" data-down="${c.id}" ${i===categories.length-1?'disabled':''} aria-label="下へ">↓</button><button class="secondary" data-rename="${c.id}">名称</button><button class="danger" data-delete="${c.id}">削除</button>`:''}</div>`).join('');
+function renderCategoryManager(){const el=document.getElementById('categoryManager');if(!el)return;el.innerHTML=categories.map((c,i)=>`<div class="monthitem" style="display:flex;align-items:center;gap:8px;margin:8px 0"><span class="dot" style="background:${c.color};flex:none"></span><div style="flex:1;min-width:0"><strong style="font-size:13px">${escapeHtml(c.name)}</strong><div class="small">${c.invest?'投資資産（評価額・累計元本）':'通常資産（評価額）'}${c.fixed?'・固定':''}</div></div><button class="secondary" data-up="${c.id}" ${i===0?'disabled':''} aria-label="上へ">↑</button><button class="secondary" data-down="${c.id}" ${i===categories.length-1?'disabled':''} aria-label="下へ">↓</button>${!c.fixed?`<button class="secondary" data-rename="${c.id}">名称変更</button><button class="danger" data-delete="${c.id}">削除</button>`:''}</div>`).join('');
  el.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveCategory(b.dataset.up,-1));el.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveCategory(b.dataset.down,1));el.querySelectorAll('[data-rename]').forEach(b=>b.onclick=()=>renameCategory(b.dataset.rename));el.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteCategory(b.dataset.delete));}
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-async function moveCategory(id,delta){let i=categories.findIndex(c=>c.id===id),j=i+delta;if(i<4||j<4||j>=categories.length)return;[categories[i],categories[j]]=[categories[j],categories[i]];await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
+async function moveCategory(id,delta){let i=categories.findIndex(c=>c.id===id),j=i+delta;if(i<0||j<0||j>=categories.length)return;[categories[i],categories[j]]=[categories[j],categories[i]];await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
 async function renameCategory(id){let c=categories.find(x=>x.id===id),name=prompt('カテゴリー名を入力してください',c?.name||'');if(name===null)return;name=name.trim();if(!name)return alert('カテゴリー名を入力してください');if(categories.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()))return alert('同じ名前のカテゴリーがあります');c.name=name;await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
 async function deleteCategory(id){let c=categories.find(x=>x.id===id);if(!c||!confirm(`「${c.name}」を削除しますか？\n過去の記録からもこのカテゴリーのデータが削除されます。`))return;categories=categories.filter(x=>x.id!==id);for(const r of records){if(r.values)delete r.values[id];await put('records',r)}await persistCategories();renderCategoryManager();initRecordForm();renderAll()}
 async function addCustomCategory(){
