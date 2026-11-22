@@ -23,8 +23,8 @@ h2{font-size:16px;margin:4px 0 13px}h3{font-size:13px;margin:0 0 10px}
 button,.btn{cursor:pointer} .primary{background:var(--green);color:#fff;border:0;border-radius:11px;padding:12px 16px;font-weight:700}
 .secondary{background:var(--green2);color:var(--green);border:0;border-radius:10px;padding:10px 13px;font-weight:700}
 .danger{background:#fff0f0;color:var(--red);border:0;border-radius:10px;padding:9px 12px}
-input,select{width:100%;border:1px solid #dce5df;border-radius:10px;padding:12px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
-label{font-size:12px;color:#52645a;display:block;margin:12px 0 6px;font-weight:650}
+input,select,textarea{width:100%;border:1px solid #dce5df;border-radius:10px;padding:12px;background:#fff;color:var(--ink);font:inherit;font-size:14px}
+textarea{border:1px solid #dce5df;border-radius:10px;padding:12px;background:#fff;color:var(--ink);font:inherit;font-size:14px;resize:vertical;min-height:82px;line-height:1.55}label{font-size:12px;color:#52645a;display:block;margin:12px 0 6px;font-weight:650}
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .help{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px}
 .barline{height:9px;background:#edf2ee;border-radius:20px;overflow:hidden;flex:1}.barline span{display:block;height:100%;background:#4b9a78;border-radius:20px}
@@ -35,6 +35,7 @@ canvas{width:100%;height:210px;display:block}
 .toolbar button{flex:1;min-width:90px}
 .monthlist{display:flex;flex-direction:column;gap:8px}.monthitem{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
 .small{font-size:11px;color:var(--muted)}
+.analysis-block{padding:12px 0;border-bottom:1px solid var(--line)}.analysis-block:last-child{border-bottom:0}.analysis-title{font-size:13px;font-weight:750;margin-bottom:5px}.analysis-tags{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.tag-option{display:inline-flex;align-items:center;gap:5px;background:#f2f6f3;border:1px solid var(--line);border-radius:20px;padding:7px 10px;font-size:11px}.tag-option input{width:auto;margin:0}.analysis-history{border:1px solid var(--line);border-radius:12px;padding:12px;margin:9px 0}
 hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 @media(min-width:650px){main{padding:22px}.big{font-size:36px}}
 </style>
@@ -90,6 +91,34 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
  </div><hr><h3>投資評価額・元本の推移</h3><canvas id="investmentChart"></canvas><div id="investmentDetails"></div>
  <p class="help">確定損益は各月に実現した利益・損失を入力し、アプリが累計します。含み損益は「現在評価額－現在の投資元本」で計算します。過去の記録には確定損益0円を適用します。</p></div>
 </section>
+<section id="analysis" class="panel">
+ <div class="card"><h2>月次分析・振り返り</h2>
+  <p class="help">毎月の資産変動を確認し、背景・自分の判断・次月の方針を記録します。分析内容は月ごとに保存され、資産記録とは別に管理されます。</p>
+  <label>分析する年月</label><input type="month" id="analysisMonth">
+  <div id="analysisStats" class="stat" style="margin:10px 0"></div>
+  <div class="analysis-block"><div class="analysis-title">1. 資産が増減した主な要因</div>
+   <div class="analysis-tags" id="factorTags">
+    <label class="tag-option"><input type="checkbox" value="株価上昇・下落">株価</label>
+    <label class="tag-option"><input type="checkbox" value="為替変動">為替</label>
+    <label class="tag-option"><input type="checkbox" value="金利・金融政策">金利・金融政策</label>
+    <label class="tag-option"><input type="checkbox" value="暗号資産の価格変動">暗号資産</label>
+    <label class="tag-option"><input type="checkbox" value="追加投資・積立">追加投資</label>
+    <label class="tag-option"><input type="checkbox" value="取り崩し・売却">取り崩し・売却</label>
+    <label class="tag-option"><input type="checkbox" value="配当金・利息">配当・利息</label>
+    <label class="tag-option"><input type="checkbox" value="生活費・大きな支出">生活費・支出</label>
+    <label class="tag-option"><input type="checkbox" value="その他">その他</label>
+   </div>
+   <textarea id="analysisCause" placeholder="例：投資信託の評価額が増加。円安も資産増加に影響したと考える。"></textarea>
+  </div>
+  <div class="analysis-block"><div class="analysis-title">2. 社会情勢・経済環境</div><textarea id="analysisEconomy" placeholder="例：米国の金融政策、日銀の政策金利、インフレ、景気、地政学リスクなど。気になったニュースと資産への影響を記録。"></textarea></div>
+  <div class="analysis-block"><div class="analysis-title">3. 自分の投資行動・判断</div><textarea id="analysisAction" placeholder="例：新NISAの積立を継続。個別株は割高と判断して購入を見送った。"></textarea></div>
+  <div class="analysis-block"><div class="analysis-title">4. 結果の検証・反省・気づき</div><textarea id="analysisReview" placeholder="例：株価だけでなく為替の影響も大きいと分かった。判断時に確認すべき指標を整理したい。"></textarea></div>
+  <div class="analysis-block"><div class="analysis-title">5. 来月の投資方針</div><textarea id="analysisNext" placeholder="例：生活防衛資金を確保しつつ積立を継続。個別株は配当の持続性を確認する。"></textarea></div>
+  <button class="primary" id="saveAnalysis" style="width:100%;margin-top:14px">この月の分析を保存</button>
+  <p class="help">同じ年月を再保存すると、その月の分析内容を更新します。分析だけを保存しても資産記録は変更されません。</p>
+ </div>
+ <div class="card"><h2>過去の月次分析</h2><div id="analysisHistory" class="monthlist"></div></div>
+</section>
 <section id="settings" class="panel">
  <div class="card"><h2>目標・設定</h2><label>総資産の目標金額（円）</label><input type="number" id="goalInput" min="0" step="10000" placeholder="例：20000000"><button class="primary" style="width:100%;margin-top:12px" id="saveGoal">目標を保存</button>
  <hr><h3>資産カテゴリーの管理</h3>
@@ -107,6 +136,7 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}
 <button data-tab="record"><b>＋</b>記録</button>
 <button data-tab="trend"><b>▥</b>推移</button>
 <button data-tab="invest"><b>◒</b>投資分析</button>
+<button data-tab="analysis"><b>✎</b>月次分析</button>
 <button data-tab="settings"><b>⚙</b>設定</button>
 </nav>
 <script>
@@ -137,7 +167,7 @@ document.getElementById('recordAddCategory').onclick=addCustomCategory;
 const yen=n=>new Intl.NumberFormat('ja-JP',{style:'currency',currency:'JPY',maximumFractionDigits:0}).format(Number(n)||0);
 const num=n=>Math.max(0,Number(n)||0);
 const signedNum=n=>Number.isFinite(Number(n))?Number(n):0;
-let db, records=[], goal=20000000, chartRange=12;
+let db, records=[], goal=20000000, chartRange=12, monthlyAnalyses={};
 const req=indexedDB.open('asset-manager-db',1);
 req.onupgradeneeded=e=>{db=e.target.result;if(!db.objectStoreNames.contains('records'))db.createObjectStore('records',{keyPath:'month'});if(!db.objectStoreNames.contains('settings'))db.createObjectStore('settings',{keyPath:'key'});};
 req.onsuccess=async e=>{db=e.target.result;await loadAll();initRecordForm();renderAll();};
@@ -148,7 +178,8 @@ function put(name,obj){return new Promise((res,rej)=>{let r=store(name,'readwrit
 function clearStore(name){return new Promise((res,rej)=>{let r=store(name,'readwrite').clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
 async function loadAll(){
  records=(await getAll('records')).sort((a,b)=>a.month.localeCompare(b.month));
- let s=await getAll('settings'),g=s.find(x=>x.key==='goal'),cs=s.find(x=>x.key==='categories');
+ let s=await getAll('settings'),g=s.find(x=>x.key==='goal'),cs=s.find(x=>x.key==='categories'),an=s.find(x=>x.key==='monthlyAnalyses');
+ monthlyAnalyses=an&&an.value&&typeof an.value==='object'?an.value:{};
  if(g)goal=g.value;
  if(cs&&Array.isArray(cs.value)&&cs.value.length){
   const saved=cs.value.filter(c=>c&&c.id!=='otherInvest'&&c.id!=='other');
@@ -177,19 +208,57 @@ function initRecordForm(){let d=new Date();let month=d.getFullYear()+'-'+String(
 function buildFields(){let month=document.getElementById('recordMonth').value;let exact=records.find(r=>r.month===month);let prev=[...records].filter(r=>r.month<month).pop();let base=exact||prev;let html='';categories.forEach(c=>{let v=base?.values?.[c.id]||{};html+=`<div class="card" style="padding:12px;margin:10px 0;border:1px solid var(--line);box-shadow:none"><div class="row"><strong>${escapeHtml(c.name)}</strong><span class="small">${c.invest?'投資資産':'資産'}</span></div><label>評価額・残高（円）</label><input type="number" min="0" step="1" inputmode="numeric" id="v_${c.id}" value="${v.value??''}" placeholder="金額を入力">`;if(c.invest){html+=`<label>現在保有分の取得元本（円）</label><input type="number" min="0" step="1" inputmode="numeric" id="p_${c.id}" value="${v.principal??''}" placeholder="現在保有している分の取得元本"><div class="formgrid"><div><label>今月の追加投資（任意）</label><input type="number" min="0" id="a_${c.id}" value="${v.added??''}" placeholder="追加額"></div><div><label>今月の取り崩し（任意）</label><input type="number" min="0" id="w_${c.id}" value="${v.withdrawn??''}" placeholder="取り崩し額"></div></div><label>今月の確定損益（円・任意）</label><input type="number" step="1" inputmode="numeric" id="r_${c.id}" value="${v.realizedPL??''}" placeholder="利益は＋、損失は−で入力"><p class="help" style="margin-top:4px">売却・分配金などで確定した損益を入力。該当がなければ空欄または0円。</p>`}html+='</div>'});document.getElementById('recordFields').innerHTML=html;}
 document.getElementById('recordMonth').addEventListener('change',buildFields);
 document.getElementById('saveRecord').onclick=async()=>{let month=document.getElementById('recordMonth').value;if(!month)return alert('年月を選択してください');let values={};categories.forEach(c=>{let value=num(document.getElementById('v_'+c.id).value);values[c.id]={value};if(c.invest){values[c.id].principal=num(document.getElementById('p_'+c.id).value);values[c.id].added=num(document.getElementById('a_'+c.id).value);values[c.id].withdrawn=num(document.getElementById('w_'+c.id).value);values[c.id].realizedPL=signedNum(document.getElementById('r_'+c.id).value)}});await put('records',{month,values,updatedAt:new Date().toISOString()});await persistCategories();await loadAll();initRecordForm();renderAll();alert(month+'の記録を保存しました');};
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='record')buildFields();if(b.dataset.tab==='trend'||b.dataset.tab==='invest')renderAll();});
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));if(b.dataset.tab==='record')buildFields();if(b.dataset.tab==='trend'||b.dataset.tab==='invest')renderAll();if(b.dataset.tab==='analysis')renderAnalysis();});
 document.querySelectorAll('.range').forEach(b=>b.onclick=()=>{chartRange=b.dataset.range==='all'?'all':Number(b.dataset.range);renderTrend();});
 function drawBars(canvas,labels,values,color='#4b9a78'){let ctx=canvas.getContext('2d'),w=canvas.width=canvas.clientWidth*devicePixelRatio,h=canvas.height=canvas.clientHeight*devicePixelRatio;ctx.scale(devicePixelRatio,devicePixelRatio);let W=canvas.clientWidth,H=canvas.clientHeight,p={l:8,r:8,t:15,b:28},max=Math.max(1,...values)*1.12;ctx.strokeStyle='#e7ede8';ctx.fillStyle='#7b8981';ctx.font='10px sans-serif';for(let i=0;i<4;i++){let y=p.t+(H-p.t-p.b)*i/3;ctx.beginPath();ctx.moveTo(p.l,y);ctx.lineTo(W-p.r,y);ctx.stroke()}let n=values.length;if(!n)return;let step=(W-p.l-p.r)/n,bw=Math.max(5,step*.56);values.forEach((v,i)=>{let bh=(H-p.t-p.b)*v/max,x=p.l+i*step+(step-bw)/2,y=H-p.b-bh;ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,bw,bh,3);ctx.fill();if(n<=12||i===0||i===n-1){ctx.fillStyle='#718078';ctx.textAlign='center';ctx.fillText(labels[i].slice(2),x+bw/2,H-9)}})}
 function drawDonut(canvas,vals){let ctx=canvas.getContext('2d'),w=canvas.width=canvas.clientWidth*devicePixelRatio,h=canvas.height=canvas.clientHeight*devicePixelRatio;ctx.scale(devicePixelRatio,devicePixelRatio);let total=vals.reduce((s,v)=>s+v.value,0),cx=w/devicePixelRatio/2,cy=105,r=78,inner=48,start=-Math.PI/2;if(!total){ctx.fillStyle='#9aa69f';ctx.textAlign='center';ctx.font='13px sans-serif';ctx.fillText('記録なし',cx,cy);return}vals.forEach(v=>{let a=v.value/total*Math.PI*2;ctx.beginPath();ctx.arc(cx,cy,r,start,start+a);ctx.arc(cx,cy,inner,start+a,start,true);ctx.closePath();ctx.fillStyle=v.color;ctx.fill();start+=a});ctx.fillStyle='#20312b';ctx.textAlign='center';ctx.font='bold 13px sans-serif';ctx.fillText('資産合計',cx,cy-3);ctx.font='bold 14px sans-serif';ctx.fillText(yen(total),cx,cy+17)}
 function renderAll(){let r=latest(),total=totals(r),prev=records.length>1?records[records.length-2]:null,change=prev?total-totals(prev):null;document.getElementById('totalValue').textContent=yen(total);document.getElementById('totalChange').textContent=r?'最新記録：'+r.month:'まずは「記録」から入力してください';document.getElementById('monthChange').textContent=change===null?'—':(change>=0?'+':'')+(prev?((change/totals(prev))*100).toFixed(1)+'%':'—');document.getElementById('monthChangeYen').textContent=change===null?'—':(change>=0?'+':'')+yen(change);document.getElementById('goalRate').textContent=goal?((total/goal)*100).toFixed(1)+'%':'—';document.getElementById('goalText').textContent='目標 '+yen(goal);let inv=investTotals(r);['investValue','invValue2'].forEach(id=>document.getElementById(id).textContent=yen(inv.value));['investPrincipal','invPrincipal2'].forEach(id=>document.getElementById(id).textContent=yen(inv.principal));['investPL','invPL2'].forEach(id=>{let e=document.getElementById(id);e.textContent=(inv.pl>=0?'+':'')+yen(inv.pl);e.className=inv.pl>=0?'positive':'negative'});['investRealized','invRealized2'].forEach(id=>{let e=document.getElementById(id);e.textContent=(inv.realized>=0?'+':'')+yen(inv.realized);e.className=inv.realized>=0?'positive':'negative'});['investTotalPL','invTotalPL2'].forEach(id=>{let e=document.getElementById(id);e.textContent=(inv.totalPL>=0?'+':'')+yen(inv.totalPL);e.className=inv.totalPL>=0?'positive':'negative'});['investRate','invRate2'].forEach(id=>document.getElementById(id).textContent=inv.principal?inv.rate.toFixed(1)+'%':'—');let vals=categories.map(c=>({name:c.name,value:num(r?.values?.[c.id]?.value),color:c.color}));drawDonut(document.getElementById('donut'),vals);let allocationTotal=vals.reduce((sum,v)=>sum+v.value,0);document.getElementById('allocation').innerHTML=vals.filter(v=>v.value>0).map(v=>`<div class="assetrow" style="grid-template-columns:10px minmax(0,1fr) auto auto;"><span class="dot" style="background:${v.color}"></span><span>${escapeHtml(v.name)}</span><span class="small" style="text-align:right;min-width:48px">${allocationTotal?(v.value/allocationTotal*100).toFixed(1):'0.0'}%</span><strong>${yen(v.value)}</strong></div>`).join('')||'<div class="empty">まだ記録がありません</div>';let labels=records.map(x=>x.month),data=records.map(totals);drawBars(document.getElementById('totalChart'),labels,data);document.getElementById('historyHint').textContent=records.length+'か月分の記録';renderTrend();renderInvestment();document.getElementById('goalInput').value=goal;}
 function renderTrend(){let rs=chartRange==='all'?records:records.slice(-chartRange);drawBars(document.getElementById('trendTotal'),rs.map(x=>x.month),rs.map(totals));let html='';categories.forEach(c=>{let vals=rs.map(r=>num(r.values?.[c.id]?.value));html+=`<div style="margin:15px 0"><div class="row"><strong style="font-size:13px">${escapeHtml(c.name)}</strong><span class="small">${yen(vals[vals.length-1]||0)}</span></div><div class="barline" style="margin-top:7px"><span style="width:${Math.max(0,...vals)?(vals[vals.length-1]/Math.max(...vals)*100):0}%;background:${c.color}"></span></div></div>`});document.getElementById('categoryTrends').innerHTML=html||'<div class="empty">記録がありません</div>';let sum=document.getElementById('changeSummary');if(records.length>=2){let a=totals(records[0]),b=totals(latest()),diff=b-a;sum.innerHTML=`<div class="row"><span>初回記録からの増減</span><strong class="${diff>=0?'positive':'negative'}">${diff>=0?'+':''}${yen(diff)}</strong></div><div class="row"><span>初回から最新まで</span><strong>${a?((diff/a)*100).toFixed(1)+'%':'—'}</strong></div><div class="row"><span>記録期間</span><strong>${records[0].month}〜${latest().month}</strong></div>`}else sum.textContent='記録が2か月分以上あると表示されます。';}
 function renderInvestment(){let rs=records;let vals=rs.map(r=>investTotals(r).value),prin=rs.map(r=>investTotals(r).principal);drawBars(document.getElementById('investmentChart'),rs.map(r=>r.month),vals,'#4f83cc');let last=latest();document.getElementById('investmentDetails').innerHTML=categories.filter(c=>c.invest).map(c=>{let v=last?.values?.[c.id]||{};let unrealized=num(v.value)-num(v.principal);let realized=records.reduce((sum,x)=>sum+num(x.values?.[c.id]?.realizedPL),0);return `<div style="padding:12px 0;border-bottom:1px solid var(--line)"><div class="row"><strong>${escapeHtml(c.name)}</strong><strong>${yen(v.value)}</strong></div><div class="row small" style="margin-top:6px"><span>投資元本 ${yen(v.principal)}</span><span class="${unrealized>=0?'positive':'negative'}">含み ${unrealized>=0?'+':''}${yen(unrealized)}</span></div><div class="row small" style="margin-top:4px"><span>確定損益累計</span><strong class="${realized>=0?'positive':'negative'}">${realized>=0?'+':''}${yen(realized)}</strong></div></div>`}).join('')||'<div class="empty">投資カテゴリーがありません</div>';}
+
+function analysisMonths(){return [...new Set([...records.map(r=>r.month),...Object.keys(monthlyAnalyses)])].sort();}
+function analysisSnapshot(month){
+ let current=records.find(r=>r.month===month),prev=[...records].filter(r=>r.month<month).pop();
+ if(!current)return {current:null,prev,total:null,delta:null,netFlow:0,adjusted:null};
+ let total=totals(current),delta=prev?total-totals(prev):null,netFlow=categories.filter(c=>c.invest).reduce((sum,c)=>sum+num(current.values?.[c.id]?.added)-num(current.values?.[c.id]?.withdrawn),0);
+ return {current,prev,total,delta,netFlow,adjusted:delta===null?null:delta-netFlow};
+}
+function renderAnalysis(){
+ const input=document.getElementById('analysisMonth');if(!input)return;
+ const months=analysisMonths();if(!input.value)input.value=latest()?.month||new Date().toISOString().slice(0,7);
+ const month=input.value, saved=monthlyAnalyses[month]||{}, snap=analysisSnapshot(month);
+ document.querySelectorAll('#factorTags input').forEach(x=>x.checked=(saved.factors||[]).includes(x.value));
+ document.getElementById('analysisCause').value=saved.cause||'';
+ document.getElementById('analysisEconomy').value=saved.economy||'';
+ document.getElementById('analysisAction').value=saved.action||'';
+ document.getElementById('analysisReview').value=saved.review||'';
+ document.getElementById('analysisNext').value=saved.next||'';
+ const stat=document.getElementById('analysisStats');
+ if(snap.current){
+  const d=snap.delta, pct=d!==null&&snap.prev&&totals(snap.prev)?(d/totals(snap.prev)*100).toFixed(1)+'%':'—';
+  stat.innerHTML=`<div class="eyebrow">${month}の資産状況</div><div style="font-size:22px;font-weight:800;margin:5px 0">${yen(snap.total)}</div><div class="row"><span class="small">前回記録からの増減</span><strong class="${d===null?'':d>=0?'positive':'negative'}">${d===null?'比較できる前月記録なし':(d>=0?'+':'')+yen(d)} ${d===null?'':'('+pct+')'}</strong></div><div class="row" style="margin-top:7px"><span class="small">投資資産の追加投資−取り崩し</span><strong>${snap.netFlow>=0?'+':''}${yen(snap.netFlow)}</strong></div><div class="row" style="margin-top:7px"><span class="small">入出金を差し引いた参考増減</span><strong class="${snap.adjusted===null?'':snap.adjusted>=0?'positive':'negative'}">${snap.adjusted===null?'—':(snap.adjusted>=0?'+':'')+yen(snap.adjusted)}</strong></div><p class="help">参考値です。カテゴリー間の資金移動、現金の入出金、配当の扱いなどは完全には補正されません。市場要因による損益そのものを示す数値ではありません。</p>`;
+ }else stat.innerHTML='<div class="eyebrow">'+month+'</div><p class="help">この月の資産記録はまだありません。先に「記録」ページで資産を保存すると、増減データを表示できます。分析メモだけを先に保存することもできます。</p>';
+ renderAnalysisHistory();
+}
+async function saveMonthlyAnalysis(){
+ const month=document.getElementById('analysisMonth').value;if(!month)return alert('年月を選択してください');
+ monthlyAnalyses[month]={factors:[...document.querySelectorAll('#factorTags input:checked')].map(x=>x.value),cause:document.getElementById('analysisCause').value,economy:document.getElementById('analysisEconomy').value,action:document.getElementById('analysisAction').value,review:document.getElementById('analysisReview').value,next:document.getElementById('analysisNext').value,updatedAt:new Date().toISOString()};
+ await put('settings',{key:'monthlyAnalyses',value:monthlyAnalyses});renderAnalysisHistory();alert(month+'の分析を保存しました');
+}
+function renderAnalysisHistory(){
+ const el=document.getElementById('analysisHistory');if(!el)return;
+ const months=Object.keys(monthlyAnalyses).sort().reverse();
+ el.innerHTML=months.length?months.map(m=>{const a=monthlyAnalyses[m],s=analysisSnapshot(m),d=s.delta;let summary=a.cause||a.economy||a.review||'分析メモあり';return `<div class="analysis-history"><div class="row"><strong>${m}</strong><span class="${d===null?'':d>=0?'positive':'negative'}">${d===null?'':(d>=0?'+':'')+yen(d)}</span></div><div class="small" style="margin:7px 0;line-height:1.5">${escapeHtml(summary.slice(0,100))}</div><button class="secondary" data-open-analysis="${m}">内容を開く・編集</button></div>`}).join(''):'<div class="empty">まだ分析記録がありません。月を選んで最初の振り返りを保存しましょう。</div>';
+ el.querySelectorAll('[data-open-analysis]').forEach(b=>b.onclick=()=>{document.getElementById('analysisMonth').value=b.dataset.openAnalysis;renderAnalysis();window.scrollTo({top:0,behavior:'smooth'});});
+}
+document.getElementById('analysisMonth').addEventListener('change',renderAnalysis);
+document.getElementById('saveAnalysis').onclick=saveMonthlyAnalysis;
 document.getElementById('saveGoal').onclick=async()=>{goal=num(document.getElementById('goalInput').value);await put('settings',{key:'goal',value:goal});renderAll();alert('目標を保存しました');};
-document.getElementById('exportBtn').onclick=()=>{download('asset-manager-backup.json',JSON.stringify({version:2,goal,categories,records},null,2),'application/json')};
+document.getElementById('exportBtn').onclick=()=>{download('asset-manager-backup.json',JSON.stringify({version:3,goal,categories,records,monthlyAnalyses},null,2),'application/json')};
 document.getElementById('csvBtn').onclick=()=>{let head=['年月',...categories.flatMap(c=>c.invest?[c.name+'評価額',c.name+'保有元本',c.name+'追加投資',c.name+'取り崩し',c.name+'今月の確定損益']:[c.name])];let rows=records.map(r=>[r.month,...categories.flatMap(c=>c.invest?[r.values?.[c.id]?.value||0,r.values?.[c.id]?.principal||0,r.values?.[c.id]?.added||0,r.values?.[c.id]?.withdrawn||0,r.values?.[c.id]?.realizedPL||0]:[r.values?.[c.id]?.value||0])]);let csv=[head,...rows].map(row=>row.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');download('asset-manager.csv','\ufeff'+csv,'text/csv')};
 function download(name,data,type){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-document.getElementById('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let data=JSON.parse(await f.text());if(!Array.isArray(data.records))throw Error('形式が違います');if(!confirm('現在の記録を置き換えて復元します。よろしいですか？'))return;await clearStore('records');await clearStore('settings');for(let r of data.records)await put('records',r);goal=num(data.goal)||20000000;await put('settings',{key:'goal',value:goal});if(Array.isArray(data.categories)&&data.categories.length){categories=data.categories;await persistCategories()}await loadAll();initRecordForm();renderAll();alert('復元しました')}catch(err){alert('バックアップを読み込めませんでした：'+err.message)}e.target.value=''};
-document.getElementById('clearBtn').onclick=async()=>{if(!confirm('すべての月次記録と目標を削除します。この操作は取り消せません。'))return;await clearStore('records');await clearStore('settings');records=[];goal=20000000;categories=defaultCategories.map(c=>({...c}));await persistCategories();initRecordForm();renderCategoryManager();renderAll();alert('削除しました')};
+document.getElementById('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let data=JSON.parse(await f.text());if(!Array.isArray(data.records))throw Error('形式が違います');if(!confirm('現在の記録を置き換えて復元します。よろしいですか？'))return;await clearStore('records');await clearStore('settings');for(let r of data.records)await put('records',r);goal=num(data.goal)||20000000;await put('settings',{key:'goal',value:goal});if(Array.isArray(data.categories)&&data.categories.length){categories=data.categories;await persistCategories()}monthlyAnalyses=data.monthlyAnalyses&&typeof data.monthlyAnalyses==='object'?data.monthlyAnalyses:{};await put('settings',{key:'monthlyAnalyses',value:monthlyAnalyses});await loadAll();initRecordForm();renderAll();alert('復元しました')}catch(err){alert('バックアップを読み込めませんでした：'+err.message)}e.target.value=''};
+document.getElementById('clearBtn').onclick=async()=>{if(!confirm('すべての月次記録と目標を削除します。この操作は取り消せません。'))return;await clearStore('records');await clearStore('settings');records=[];monthlyAnalyses={};goal=20000000;categories=defaultCategories.map(c=>({...c}));await persistCategories();initRecordForm();renderCategoryManager();renderAll();alert('削除しました')};
 window.addEventListener('resize',()=>renderAll());
 </script>
 </body></html>
